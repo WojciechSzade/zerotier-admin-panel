@@ -60,42 +60,24 @@ async function saveMember(memberId, passed_data) {
     console.log('Error \n', error)
   }
 }
-
-async function addIPAssignment(memberId, ip) {
-  const url = `https://my.zerotier.com/api/network/${networkId}/member/${memberId}`;
-  const headers = {
-    'Authorization': `Bearer ${zerotierToken}`,
-    'Content-Type': 'application/json',
-  };
-  const data = {
-    'config': {
-      'ipAssignments': ip,
-    },
-  };
-
-  try {
-    const response = await axios.post(url, data, { headers });
-    if (response.status === 200) {
-      console.log('Member IP assignment updated successfully.');
-    }
-  } catch (error) {
-    console.log('Failed to update member IP assignment.');
-    console.log('Error message:', error.message);
-    console.log('Error \n', error)
-    return error
+function createIPList(ip){
+  let ipList = '';
+  for (let i = 0; i < ip.length; i++) {
+    ipList += "<li><button id='" + i + "' onclick='deleteIPAssigment(this)' style='border:none;background:white;cursor:pointer'>&#128465;</button><span  id='" + i + "' class='ipListing' ondblclick='editIPAssigment(this)'>" + ip[i] + "</span></li>";
   }
-
+  return ipList;
 }
-
 
 app.get('/', async (req, res) => {
   try {
     const members = await getMembers();
     let tableRows = '';
     members.forEach(member => {
+      console.log(member)
       const id = member.id.substring(member.id.length - 10, member.id.length);
       const ipAssignments = member.config.ipAssignments || [];
-      const ipList = ipAssignments.map(ip => `<li ondblclick="editIPAssigment(this)">${ip}</li>`).join('');
+      const ipList = createIPList(ipAssignments);
+      
       const lastSeen = timeToHuman(member.clock - member.lastSeen)
       const authorized = member.config.authorized ? 'checked' : '';
       tableRows += `
@@ -135,11 +117,17 @@ app.get('/', async (req, res) => {
 
     const script = `
         <script>
+        function createIPList(ip){
+          let ipList = '';
+          for (let i = 0; i < ip.length; i++) {
+            ipList += "<li><button id='" + i + "' onclick='deleteIPAssigment(this)' style='border:none;background:white;cursor:pointer'>&#128465;</button><span id='" + i + "' class='ipListing' ondblclick='editIPAssigment(this)'>" + ip[i] + "</span></li>";
+          }
+          return ipList + '<li><input type=\\"text\\" size=\\"9\\"><button type=\\"submit\\" onclick=\\"addIPAssigment(this)\\">✓</button>';          
+        }
         function sortTable(columnIndex) {
           const table = document.getElementById('membersTable');
           const rows = Array.from(table.getElementsByTagName('tr'));
         
-          // Remove the header row from the sorting
           const sortedRows = rows.slice(1);
         
           sortedRows.sort((a, b) => {
@@ -163,19 +151,13 @@ app.get('/', async (req, res) => {
             table.classList.remove('desc1');
             table.classList.add('asc1');
           }
-        
-          // Reorder the rows in the table
           for (let i = 0; i < sortedRows.length; i++) {
             table.tBodies[0].appendChild(sortedRows[i]);
           }
-        
-          // Remove arrow indicators from all columns
           const headers = table.getElementsByTagName('th');
           for (let i = 0; i < headers.length; i++) {
             headers[i].classList.remove('asc', 'desc');
           }
-        
-          // Add arrow indicator to the sorted column
           headers[columnIndex].classList.add(table.classList.contains('asc1') ? 'asc' : 'desc');
       
         }
@@ -208,6 +190,7 @@ app.get('/', async (req, res) => {
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, authorized: authorized }));
           }
+          
           function editIPAssigment(cell) {
             const originalIP = cell.innerText;
             cell.innerHTML = '<input type=\\"text\\" id=\\"newIPInput\\" value=\\"' + originalIP + '\\" size="9"><button onclick=\\"saveIP(event)\\">✓</button>';
@@ -215,29 +198,24 @@ app.get('/', async (req, res) => {
           
           function saveIP(event) {
             const button = event.target;
-            const row = button.parentNode.parentNode.parentNode;
+            const row = button.parentNode.parentNode.parentNode.parentNode;
             const id = row.cells[1].innerText;
             const newIPInput = document.getElementById('newIPInput');
             const newIP = newIPInput.value;
             let ip = [];
-            for (let i = 0; i < row.cells[4].getElementsByTagName('li').length - 1; i++) {
-              if (row.cells[4].getElementsByTagName('li')[i].innerText == '✓') {
+            for (let i = 0; i < row.cells[4].getElementsByClassName('ipListing').length; i++) {
+              if (row.cells[4].getElementsByClassName('ipListing')[i].innerText == '✓') {
                 ip.push(document.getElementById('newIPInput').value)
               }
-              else{
-              ip.push(row.cells[4].getElementsByTagName('li')[i].innerText);
+              else {
+              ip.push(row.cells[4].getElementsByClassName('ipListing')[i].innerText);
               }
-              
             }
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
-            let ipList = '';
-            for (let i = 0; i < ip.length; i++) {
-              ipList += '<li>' + ip[i] + '</li>';
-            }
-            row.cells[4].innerHTML = ipList + '<li><input type=\\"text\\" size=\\"9\\"><button type=\\"submit\\" onclick=\\"addIPAssigment(this)\\">✓</button>';          
+            row.cells[4].innerHTML = createIPList(ip);
           }
           
           function addIPAssigment(button) {
@@ -245,21 +223,40 @@ app.get('/', async (req, res) => {
             console.log(row)
             const id = row.cells[1].innerText;
             const ipInput = row.cells[4].getElementsByTagName('input')[0];
-            // ip should be new ip and the existing ips together
             const ip = [];
             for (let i = 0; i < row.cells[4].getElementsByTagName('li').length - 1; i++) {
-              ip.push(row.cells[4].getElementsByTagName('li')[i].innerText);
+              ip.push(row.cells[4].getElementsByClassName('ipListing')[i].innerText);
             }
             ip.push(ipInput.value);
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
-            let ipList = '';
-            for (let i = 0; i < ip.length; i++) {
-              ipList += '<li>' + ip[i] + '</li>';
+            row.cells[4].innerHTML = createIPList(ip)
+          }
+          
+          
+          function deleteIPAssigment(button) {
+            const row = button.parentNode.parentNode.parentNode;
+            const id = row.cells[1].innerText;
+            const deletedIPIndex = button.id;
+            console.log(deletedIPIndex)
+            const ip = [];
+            var ips = row.cells[4].getElementsByClassName('ipListing');
+            let ips2 = [];
+            for (let i = 0; i < ips.length; i++) {
+              ips2.push(ips[i].innerText); 
             }
-            row.cells[4].innerHTML = ipList + '<li><input type=\\"text\\" size=\\"9\\"><button type=\\"submit\\" onclick=\\"addIPAssigment(this)\\">✓</button>';
+            for (let i = 0; i < ips2.length; i++) {
+              if (i != deletedIPIndex) {
+                ip.push(ips2[i]);
+              }
+            }
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/addipassignment');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({ id: id, ip: ip }));
+            row.cells[4].innerHTML = createIPList(ip)
           }
           
           function editDescription(cell){
@@ -313,7 +310,7 @@ app.get('/', async (req, res) => {
               }
             </style>
           </head>
-          <body>
+          <body style="font-family:'Courier New', Courier, monospace">
             <h1>ZeroTier Members</h1>
             ${table}
             ${script}

@@ -5,7 +5,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2"
   },
-  "name": "projekt-sikomp2",
+  "name": "zerotier-admin-panel",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
