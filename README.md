@@ -8,4 +8,5 @@ To use run `npm install` and set networkID and API_KEY in the app.js file or cre
 Ip assigments page  
   ![image](https://github.com/WojciechSzade/zerotier-admin-panel/assets/96198418/a0cbc571-0b3c-40e7-9551-e540431c602e)
 Members page  
-  
+![image](https://github.com/WojciechSzade/zerotier-admin-panel/assets/96198418/cdeb55da-c384-4a22-a1c9-1e12e525fcf3)
+DNS changing page
