@@ -40,6 +40,7 @@ router.get('/', (req, res) => {
                   <th><a href ="/members">Members</a></th>
                   <th><a href ="/ip">IP</a></th>
                   <th><a href ="/dns">DNS</a></th>
+                  <th><a href ="/routing">Routing</a></th>
                 </tr>
           </body>
         </html>

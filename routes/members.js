@@ -225,7 +225,7 @@ router.get('/', async (req, res) => {
             xhr.open('POST', '/members/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
-            row.cells[4].innerHTML = createIPList(ip)
+            row.cells[4].innerHTML = createIPList(ip);
           }
           
           

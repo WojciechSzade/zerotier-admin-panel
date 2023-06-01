@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
       <tr>
           <td>${ipLength}</td>
           <td>${ipType}</td>
-          <td ondblclick="editIpStart(this)">${pool.ipRangeStart}</td>
+          <td ondblclick="editIpStart(this)"><button onclick='deleteIp(this)' style='border:none;background:white;cursor:pointer'>&#128465;</button>${pool.ipRangeStart}</td>
           <td ondblclick="editIpEnd(this)">${pool.ipRangeEnd}</td>
       </tr>
       `
@@ -135,7 +135,7 @@ router.get('/', async (req, res) => {
         const rows = Array.from(table.getElementsByTagName('tr'));
         const ipStart = [];
         for (let i = 1; i < rows.length - 1; i++) {
-          ipStart.push(rows[i].getElementsByTagName('td')[2].innerText);
+          ipStart.push(rows[i].getElementsByTagName('td')[2].innerText.replace("🗑", ""));
         }
         return ipStart; 
       }
@@ -145,7 +145,7 @@ router.get('/', async (req, res) => {
         const rows = Array.from(table.getElementsByTagName('tr'));
         const ipEnd = [];
         for (let i = 1; i < rows.length - 1; i++) {
-          ipEnd.push(rows[i].getElementsByTagName('td')[3].innerText);
+          ipEnd.push(rows[i].getElementsByTagName('td')[3].innerText.replace("🗑", ""));
         }
         return ipEnd;
       }
@@ -205,11 +205,11 @@ router.get('/', async (req, res) => {
           return;
         }
         let ipListStart = getAllIpStart();
-        let ipListEnd = getAllIpEnd();
+        let ipListEnd = getAllIpEnd(); 
         ipListStart.push(ipStart);
         ipListEnd.push(ipEnd);
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/ipv4/updateIP');
+        xhr.open('POST', '/ip/updateIP');
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.send(JSON.stringify({ ipListStart : ipListStart, ipListEnd : ipListEnd }));
         row.getElementsByTagName('input')[0].value = '';
@@ -224,9 +224,27 @@ router.get('/', async (req, res) => {
         cell1.innerHTML = tableBody.rows.length - 1;  
         cell2.innerHTML = ipStart.length > 15 ? 'IPv6' : 'IPv4';
         cell3.innerHTML = ipStart;
-        cell4.innerHTML = ipEnd;
+        cell4.innerHTML = ipEnd; 
+      }
+      
+      function deleteIp(button) {
+        const row = button.parentNode.parentNode;
+        const id = row.getElementsByTagName('td')[0].innerText;
+        let ipListStart = getAllIpStart();
+        let ipListEnd = getAllIpEnd();
+        ipListStart.splice(id - 1, 1);
+        ipListEnd.splice(id - 1, 1);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/ip/updateIP');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({ ipListStart : ipListStart, ipListEnd : ipListEnd }));
         
-         
+        const table = document.getElementById('ipTable');
+        const tableBody = table.getElementsByTagName('tbody')[0];
+        tableBody.deleteRow(id);
+        for (let i = id; i < tableBody.rows.length - 1; i++) {
+          tableBody.rows[i].getElementsByTagName('td')[0].innerText = i;
+        }
         
       }
       </script>
