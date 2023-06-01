@@ -1,10 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
-require('dotenv').config();
 
-const networkId = process.env.NETWORK_ID || 'ENTER-YOUR-NETWORK-ID-HERE';
-const zerotierToken = process.env.API_KEY || 'ENTER-YOUR-API-KEY-HERE';
+const { networkId, zerotierToken } = require('../app.js');
+
 
 async function getMembers() {
   try {
@@ -23,44 +22,44 @@ async function getMembers() {
 }
 
 function timeToHuman(time) {
-    const minutes = Math.floor((time) / 60000)
-    const hours = Math.floor(minutes / 60)
-    const days = Math.floor(hours / 24)
-    const humanTime = days > 0 ? days + ' days ago' : hours > 0 ? hours + ' hours ago' : minutes > 0 ? minutes + ' minutes ago' : 'less than a minute'
-    return humanTime
-  }
-  
-  
-  async function saveMember(memberId, passed_data) {
-    const url = `https://my.zerotier.com/api/network/${networkId}/member/${memberId}`;
-    const headers = {
-      'Authorization': `Bearer ${zerotierToken}`,
-      'Content-Type': 'application/json',
-    };
-    const data = passed_data;
-  
-  
-    try {
-      const response = await axios.post(url, data, { headers });
-      if (response.status === 200) {
-        console.log('Member updated successfully.');
-      } else {
-        console.log('Failed to update member.');
-        console.log('Error message:', response.data);
-      }
-    } catch (error) {
-      console.log('Failed to update name.');
-      console.log('Error message:', error.message);
-      console.log('Error \n', error)
+  const minutes = Math.floor((time) / 60000)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  const humanTime = days > 0 ? days + ' days ago' : hours > 0 ? hours + ' hours ago' : minutes > 0 ? minutes + ' minutes ago' : 'less than a minute'
+  return humanTime
+}
+
+
+async function saveMember(memberId, passed_data) {
+  const url = `https://my.zerotier.com/api/network/${networkId}/member/${memberId}`;
+  const headers = {
+    'Authorization': `Bearer ${zerotierToken}`,
+    'Content-Type': 'application/json',
+  };
+  const data = passed_data;
+
+
+  try {
+    const response = await axios.post(url, data, { headers });
+    if (response.status === 200) {
+      console.log('Member updated successfully.');
+    } else {
+      console.log('Failed to update member.');
+      console.log('Error message:', response.data);
     }
+  } catch (error) {
+    console.log('Failed to update name.');
+    console.log('Error message:', error.message);
+    console.log('Error \n', error)
   }
-  function createIPList(ip){
-    let ipList = '';
-    for (let i = 0; i < ip.length; i++) {
-      ipList += "<li><button id='" + i + "' onclick='deleteIPAssigment(this)' style='border:none;background:white;cursor:pointer'>&#128465;</button><span  id='" + i + "' class='ipListing' ondblclick='editIPAssigment(this)'>" + ip[i] + "</span></li>";
-    }
-    return ipList;
+}
+function createIPList(ip) {
+  let ipList = '';
+  for (let i = 0; i < ip.length; i++) {
+    ipList += "<li><button id='" + i + "' onclick='deleteIPAssigment(this)' style='border:none;background:white;cursor:pointer'>&#128465;</button><span  id='" + i + "' class='ipListing' ondblclick='editIPAssigment(this)'>" + ip[i] + "</span></li>";
   }
+  return ipList;
+}
 
 router.get('/', async (req, res) => {
   try {
@@ -71,7 +70,7 @@ router.get('/', async (req, res) => {
       const id = member.id.substring(member.id.length - 10, member.id.length);
       const ipAssignments = member.config.ipAssignments || [];
       const ipList = createIPList(ipAssignments);
-      
+
       const lastSeen = timeToHuman(member.clock - member.lastSeen)
       const authorized = member.config.authorized ? 'checked' : '';
       tableRows += `
@@ -168,7 +167,7 @@ router.get('/', async (req, res) => {
             const newNameInput = document.getElementById('newNameInput');
             const newName = newNameInput.value;
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/savename');
+            xhr.open('POST', '/members/savename');
             xhr.setRequestHeader('Content-Type', 'application/json');   
             xhr.send(JSON.stringify({ id: id, newName: newName }));
             row.cells[2].innerText = newName;
@@ -180,7 +179,7 @@ router.get('/', async (req, res) => {
             const id = row.cells[1].innerText;
             const authorized = document.getElementById('authorized').checked;
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/saveauthorized');
+            xhr.open('POST', '/members/saveauthorized');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, authorized: authorized }));
           }
@@ -206,7 +205,7 @@ router.get('/', async (req, res) => {
               }
             }
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/addipassignment');
+            xhr.open('POST', '/members/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
             row.cells[4].innerHTML = createIPList(ip);
@@ -223,7 +222,7 @@ router.get('/', async (req, res) => {
             }
             ip.push(ipInput.value);
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/addipassignment');
+            xhr.open('POST', '/members/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
             row.cells[4].innerHTML = createIPList(ip)
@@ -247,7 +246,7 @@ router.get('/', async (req, res) => {
               }
             }
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/addipassignment');
+            xhr.open('POST', '/members/addipassignment');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, ip: ip }));
             row.cells[4].innerHTML = createIPList(ip)
@@ -265,7 +264,7 @@ router.get('/', async (req, res) => {
             const newDescriptionInput = document.getElementById('newDescriptionInput');
             const newDescription = newDescriptionInput.value;
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', '/savedescription');
+            xhr.open('POST', '/members/savedescription');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({ id: id, newDescription: newDescription }));
             row.cells[3].innerText = newDescription;
@@ -292,7 +291,7 @@ router.get('/', async (req, res) => {
                 border-bottom: 1px solid #ddd;
                 cursor: pointer;
               }
-              }
+              
               .asc:after {
                 content: ' ▲';
               }
@@ -306,6 +305,7 @@ router.get('/', async (req, res) => {
             </style>
           </head>
           <body style="font-family:'Courier New', Courier, monospace">
+            <h2><a href="/">Home</a></h2>
             <h1>ZeroTier Members</h1>
             ${table}
             ${script}
@@ -321,18 +321,18 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/savename', (req, res) => {
-    const id = req.body.id;
-    const newName = req.body.newName;
-    console.log('Saving member name:', newName, 'for member ID:', id)
-    data = {
-      'name': newName,
-    }
-    saveMember(id, data);
-    res.send('Saved successfully');
+  const id = req.body.id;
+  const newName = req.body.newName;
+  console.log('Saving member name:', newName, 'for member ID:', id)
+  data = {
+    'name': newName,
+  }
+  saveMember(id, data);
+  res.send('Saved successfully');
 });
 
 router.post('/saveauthorized', (req, res) => {
-    const id = req.body.id;
+  const id = req.body.id;
   const authorized = req.body.authorized;
   console.log('Saving member authorized:', authorized, 'for member ID:', id)
   data = {
@@ -343,25 +343,25 @@ router.post('/saveauthorized', (req, res) => {
 });
 
 router.post('/addipassignment', (req, res) => {
-    const id = req.body.id;
-    const ip = req.body.ip;
-    console.log('Saving member IP assignment:', ip, 'for member ID:', id)
-    const data = {
-      'config': {
-        'ipAssignments': ip,
-      },
-    }
-    saveMember(id, data);
-    res.send('Saved successfully');
+  const id = req.body.id;
+  const ip = req.body.ip;
+  console.log('Saving member IP assignment:', ip, 'for member ID:', id)
+  const data = {
+    'config': {
+      'ipAssignments': ip,
+    },
+  }
+  saveMember(id, data);
+  res.send('Saved successfully');
 });
 router.post('/savedescription', (req, res) => {
-    const id = req.body.id;
-    const newDescription = req.body.newDescription;
-    console.log('Saving member description:', newDescription, 'for member ID:', id)
-    data = {
-      'description': newDescription,
-    }
-    saveMember(id, data);
-    res.send('Saved successfully');
-  });
+  const id = req.body.id;
+  const newDescription = req.body.newDescription;
+  console.log('Saving member description:', newDescription, 'for member ID:', id)
+  data = {
+    'description': newDescription,
+  }
+  saveMember(id, data);
+  res.send('Saved successfully');
+});
 module.exports = router;

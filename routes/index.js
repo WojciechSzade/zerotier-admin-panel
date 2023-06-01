@@ -38,8 +38,7 @@ router.get('/', (req, res) => {
               <thead>
                 <tr>
                   <th><a href ="/members">Members</a></th>
-                  <th><a href ="/ipv4">IPv4</a></th>
-                  <th><a href ="/ipv6">IPv6</a></th>
+                  <th><a href ="/ip">IP</a></th>
                   <th><a href ="/dns">DNS</a></th>
                 </tr>
           </body>
