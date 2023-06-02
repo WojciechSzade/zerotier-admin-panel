@@ -13,6 +13,7 @@ app.use('/', require('./routes/index'));
 app.use('/members', require('./routes/members'));
 app.use('/ip', require('./routes/ip'));
 app.use('/dns', require('./routes/dns'));
+app.use('/routes', require('./routes/routes'));
 
 const networkInterface = process.env.NETWORK_INTERFACE || 'eth0'; 
 const networkIP = process.env.NETWORK_IP || 'localhost';
