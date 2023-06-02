@@ -20,5 +20,5 @@ const port = process.env.NETWORK_PORT || 3000;
 
 
 app.listen(port, networkIP, () => {
-  console.log(`Server running on network interface ${networkInterface} on IP ${networkIP} on port ${port}`);
+  console.log(`Server running on network interface ${networkInterface} on IP http://${networkIP}:${port}`);
 });

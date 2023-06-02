@@ -148,15 +148,32 @@ router.get('/', async (req, res) => {
         }
         servers.push(newServer);
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/dns/addServer');
+        xhr.open('POST', '/dns/updateServer');
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.send(JSON.stringify({servers: servers}));
         const row = button.parentNode.parentNode;
         const newRow = document.createElement('tr');
         newRow.innerHTML = "<td></td><td><button type='submit' onclick=deleteServer(this) style='border:none;background:white;cursor:pointer'>🗑</button>" + newServer + "</td>";
         row.parentNode.insertBefore(newRow, row.previousSibling);
-        button.previousElementSibling.value = '';
-        
+        button.previousElementSibling.value = ''; 
+      }
+      
+      function deleteServer(button){
+        const table = document.getElementById('dnsTable');
+        const rows = Array.from(table.getElementsByTagName('tr'));
+        let servers = [];
+        for (let i = 1; i < rows.length - 1; i++) {
+          servers.push(rows[i].getElementsByTagName('td')[1].innerText.replace('🗑', ''));
+        }
+        const serverToDelete = button.parentNode.innerText.replace('🗑', '');
+        servers.splice(servers.indexOf(serverToDelete), 1);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/dns/updateServer');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({servers: servers}));
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row.previousSibling);
+        row.parentNode.removeChild(row);
       }
       
       </script>
@@ -209,7 +226,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/addServer', async (req, res) => {
+router.post('/updateServer', async (req, res) => {
   try {
     const servers = req.body.servers;
     updateDNS(null, servers);
