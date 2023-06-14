@@ -66,7 +66,6 @@ router.get('/', async (req, res) => {
     const members = await getMembers();
     let tableRows = '';
     members.forEach(member => {
-      console.log(member)
       const id = member.id.substring(member.id.length - 10, member.id.length);
       const ipAssignments = member.config.ipAssignments || [];
       const ipList = createIPList(ipAssignments);
@@ -175,7 +174,6 @@ router.get('/', async (req, res) => {
           
           function saveAuthorized(cell) {
             const row = cell.parentNode;
-            console.log(row)
             const id = row.cells[1].innerText;
             const authorized = document.getElementById('authorized').checked;
             const xhr = new XMLHttpRequest();
@@ -213,7 +211,7 @@ router.get('/', async (req, res) => {
           
           function addIPAssigment(button) {
             const row = button.parentNode.parentNode.parentNode;
-            console.log(row)
+
             const id = row.cells[1].innerText;
             const ipInput = row.cells[4].getElementsByTagName('input')[0];
             const ip = [];

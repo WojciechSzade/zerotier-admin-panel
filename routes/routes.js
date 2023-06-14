@@ -20,14 +20,13 @@ async function getRoutes() {
 }
 
 async function updateRoutes(routes) {
-    console.log(routes);
   try {
     for (let i = 0; i < routes.length; i++) {
         if (routes[i].via === 'undefined' || routes[i].via === '' || routes[i].via === 'LAN') {
             routes[i].via = null;
         }
     }
-    console.log(routes);
+
         
     const response = await axios.post(`https://api.zerotier.com/api/v1/network/${networkId}`, {
       config: {
