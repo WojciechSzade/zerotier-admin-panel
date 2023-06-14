@@ -1,8 +1,11 @@
 #!/bin/bash
 
 yay -S --noconfirm npm
+mkdir ~/temp-zerotier-admin-panel-dir
+cd ~/temp-zerotier-admin-panel-dir
 git clone https://github.com/WojciechSzade/zerotier-admin-panel.git
-sudo mv zerotier-admin-panel /bin/zerotier-admin-panel
+sudo mv ~/temp-zerotier-admin-panel-dir/zerotier-admin-panel /bin/zerotier-admin-panel
+rm -r ~/temp-zerotier-admin-panel-dir
 cd /bin/zerotier-admin-panel
 npm install
 sudo touch .env
@@ -14,4 +17,3 @@ sudo echo "$text" > .env
 echo "Enter the network id and api key to the /bin/zerotier-admin-panel/.env file and then run node app.js to run the server"
 sudo vim /bin/zerotier-admin-panel/.env
 node app.js
-
