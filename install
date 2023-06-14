@@ -12,7 +12,8 @@ sudo touch .env
 sudo chmod 777 .env
 text="UNCOMMENT THE LINES BELOW AFTER YOU ENTER THE ID AND API_KEY
 #NETWORK_ID=ENTER_YOUR_NETWORK_ID
-#API_KEY=ENTER_YOUR_API_KEY"
+#API_KEY=ENTER_YOUR_API_KEY
+#NETWORK_IP=ENTER_THE_IP_YOU_WANT_TO_USE"
 sudo echo "$text" > .env
 echo "Enter the network id and api key to the /bin/zerotier-admin-panel/.env file and then run node app.js to run the server"
 sudo vim /bin/zerotier-admin-panel/.env
