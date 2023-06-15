@@ -143,10 +143,12 @@ router.get('/', async (req, res) => {
         const rows = Array.from(table.getElementsByTagName('tr'));
         const newServer = button.previousElementSibling.value;
         let servers = [];
-        for (let i = 1; i < rows.length - 1; i++) {
+        const length = rows.length > 3 ? rows.length - 1 : 1;
+        for (let i = 1; i < rows.length > length; i++) {
           servers.push(rows[i].getElementsByTagName('td')[1].innerText.replace('🗑', ''));  
         }
         servers.push(newServer);
+        console.log(servers)
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/dns/updateServer');
         xhr.setRequestHeader('Content-Type', 'application/json');
