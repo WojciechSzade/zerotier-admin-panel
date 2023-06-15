@@ -1,20 +1,80 @@
 #!/bin/bash
 
+# Check if environment variables exist
+if [[ -z "$ZEROTIER_NETWORK_ID" || -z "$ZEROTIER_API_KEY" ]]; then
+  echo "Error: Required environment variables are missing."
+  echo "Please set the following environment variables:"
+  echo "- ZEROTIER_NETWORK_ID (with a length of 16)"
+  echo "- ZEROTIER_API_KEY (with a length of 32)"
+  echo "You can set the environment variables using the following commands:"
+  echo "export ZEROTIER_NETWORK_ID=<your_network_id>"
+  echo "export ZEROTIER_API_KEY=<your_api_key>"
+  echo "You can also set the ZEROTIER_NETWORK_IP with the desired IP you want to run the server with. Otherwise it will be run on localhost:3000"
+  exit 1
+fi
+
+# Check the length of environment variables
+if [[ ${#ZEROTIER_NETWORK_ID} -ne 16 || ${#ZEROTIER_API_KEY} -ne 32 ]]; then
+  echo "Error: Invalid length of environment variables."
+  echo "Please ensure that the following environment variables have the correct lengths:"
+  echo "- ZEROTIER_NETWORK_ID (16 characters)"
+  echo "- ZEROTIER_API_KEY (32 characters)"
+  exit 1
+fi
+
+# Set the network IP if provided, otherwise use a placeholder
+if [[ -n "$ZEROTIER_NETWORK_IP" ]]; then
+  NETWORK_IP="$ZEROTIER_NETWORK_IP"
+else
+  NETWORK_IP="ENTER-THE-IP-YOU-WANT-TO-HOST-THE-SERVER-ON"
+fi
+
+# Install dependencies
 yay -S --noconfirm npm
+
+# Clone repository
 mkdir ~/temp-zerotier-admin-panel-dir
 cd ~/temp-zerotier-admin-panel-dir
 git clone https://github.com/WojciechSzade/zerotier-admin-panel.git
 sudo mv ~/temp-zerotier-admin-panel-dir/zerotier-admin-panel /bin/zerotier-admin-panel
 rm -r ~/temp-zerotier-admin-panel-dir
+
+# Install dependencies
 cd /bin/zerotier-admin-panel
 npm install
-sudo touch .env
-sudo chmod 777 .env
-text="UNCOMMENT THE LINES BELOW AFTER YOU ENTER THE ID AND API_KEY
-#NETWORK_ID=ENTER_YOUR_NETWORK_ID
-#API_KEY=ENTER_YOUR_API_KEY
-#NETWORK_IP=ENTER_THE_IP_YOU_WANT_TO_USE"
-sudo echo "$text" > .env
-echo "Enter the network id and api key to the /bin/zerotier-admin-panel/.env file and then run node app.js to run the server"
-sudo vim /bin/zerotier-admin-panel/.env
-node app.js
+
+
+# Create and update .env file
+sudo tee /bin/zerotier-admin-panel/.env > /dev/null << EOF
+NETWORK_ID=$ZEROTIER_NETWORK_ID
+API_KEY=$ZEROTIER_API_KEY
+#NETWORK_IP=$NETWORK_IP
+EOF
+sudo chmod 644 /bin/zerotier-admin-panel/.env
+
+# Create systemd service file
+SERVICE_FILE="/lib/systemd/system/zerotier-admin-panel.service"
+sudo tee "$SERVICE_FILE" > /dev/null << EOF
+[Unit]
+Description=An admin panel for zerotier network
+After=network.target
+
+[Service]
+Environment=NODE_ENV=production
+User=$(whoami)
+ExecStart=/usr/bin/node /bin/zerotier-admin-panel/app.js
+WorkingDirectory=/bin/zerotier-admin-panel
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Restart daemon service, enable and start the service
+sudo systemctl daemon-reload
+sudo systemctl enable zerotier-admin-panel
+sudo systemctl start zerotier-admin-panel
+
+echo "The zerotier-admin-panel service has been enabled and started."
+echo "You can check the status using the command: systemctl status zerotier-admin-panel (it will also tell you what IP the server is running on)."

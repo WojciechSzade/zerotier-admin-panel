@@ -158,7 +158,7 @@ router.get('/', async (req, res) => {
       function saveIpStart(button) {
         const row = button.parentNode.parentNode;
         const id = row.getElementsByTagName('td')[0].innerText;
-        const ipStart = row.getElementsByTagName('input')[0].value;
+        const ipStart = row.getElementsByTagName('input')[0].value.replace("🗑", "");
         if (ipStart.length < 7) {
           alert('Invalid IP Start');
           return;
