@@ -82,7 +82,7 @@ router.get('/', async (req, res) => {
           </thead>
           <tbody>
             <tr>
-              <td>${domain}</td>
+              <td ondblclick="editDomain(this)">${domain}</td>
               ${tableRows}
             </tr>
           </tbody>
@@ -176,6 +176,20 @@ router.get('/', async (req, res) => {
         row.parentNode.removeChild(row);
       }
       
+      function editDomain(cell){
+        const originalDomainName = cell.innerText;
+        cell.innerHTML = "<input type='text' value='" + originalDomainName + "'/><button onclick='saveDomain(this)'>✓</button>";
+      }
+      
+      function saveDomain(cell){
+        const newDomainName = cell.previousElementSibling.value;
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/dns/updateDomain');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({newDomainName: newDomainName}));
+        cell.parentNode.innerHTML = newDomainName;
+      }
+      
       </script>
     `
         
@@ -237,6 +251,19 @@ router.post('/updateServer', async (req, res) => {
     throw error;
   }
 });
+
+router.post('/updateDomain', async (req, res) => {
+  try {
+    const newDomainName = req.body.newDomainName;
+    updateDNS(newDomainName, null);
+    res.send('domain name updated');
+  }
+  catch (error) {
+    console.error('Error updating domain name:', error.message);
+    throw error;
+  }
+});
+
 
 
 module.exports = router;
